@@ -1,0 +1,804 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Preloader -->
+<div class="preloader">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>
+
+<div class="container-fluid animate__animated animate__fadeIn animate__faster" style="animation-delay: 0.5s;">
+  <div class="row g-4">
+    <!-- User Profile Card -->
+    <div class="col-md-4">
+      <div class="card profile-card h-100 border-0 reveal-left">
+        <div class="card-header bg-primary text-white position-relative overflow-hidden">
+          <h4 class="my-1 fw-bold">User Profile</h4>
+          <div class="header-shapes"></div>
+        </div>
+        <div class="card-body position-relative">
+          <div class="profile-avatar mb-3 text-center">
+            <div class="avatar-circle bg-primary">
+              <span class="initials text-white">{{ user.full_name[0] }}</span>
+            </div>
+          </div>
+          <h5 class="card-title text-center fw-bold mb-4">{{ user.full_name }}</h5>
+          <div class="user-info">
+            <div class="info-item d-flex align-items-center mb-3">
+              <div class="info-icon bg-light rounded-circle me-3">
+                <i class="fas fa-user text-primary"></i>
+              </div>
+              <div>
+                <small class="text-muted d-block">Username</small>
+                <strong>{{ user.username }}</strong>
+              </div>
+            </div>
+            <div class="info-item d-flex align-items-center mb-3">
+              <div class="info-icon bg-light rounded-circle me-3">
+                <i class="fas fa-envelope text-primary"></i>
+              </div>
+              <div>
+                <small class="text-muted d-block">Email</small>
+                <strong>{{ user.email }}</strong>
+              </div>
+            </div>
+            <div class="info-item d-flex align-items-center">
+              <div class="info-icon bg-light rounded-circle me-3">
+                <i class="fas fa-id-card text-primary"></i>
+              </div>
+              <div>
+                <small class="text-muted d-block">PAN</small>
+                <strong>{{ user.pan_number }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer bg-transparent border-top-0 pb-4">
+          <button class="btn btn-outline-primary btn-sm w-100 hover-btn">
+            <i class="fas fa-edit me-2"></i>Edit Profile
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tax Records Section -->
+    <div class="col-md-8">
+      <div class="tax-records-wrapper reveal-right">
+        <!-- Header section with stats -->
+        <div class="records-header mb-4">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h2 class="fw-bold text-gradient mb-1">Your Tax Records</h2>
+              <p class="text-muted mb-0">Manage and track your tax filing history</p>
+            </div>
+            <a href="{{ url_for('add_tax_record') }}" class="btn btn-primary btn-lg add-record-btn">
+              <i class="fas fa-plus-circle me-2"></i>Add New Record
+              <span class="btn-effect"></span>
+            </a>
+          </div>
+          
+          <!-- Quick Stats Cards -->
+          {% if tax_records %}
+          <div class="row g-3 mt-3 stats-container">
+            <div class="col-md-4">
+              <div class="stats-card bg-gradient-blue text-white">
+                <div class="stats-icon">
+                  <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <div class="stats-info">
+                  <h3 class="stats-number">{{ tax_records|length }}</h3>
+                  <p class="stats-label">Total Records</p>
+                </div>
+                <div class="stats-progress">
+                  <div class="progress">
+                    <div class="progress-bar" role="progressbar" style="width: 100%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="stats-card bg-gradient-green text-white">
+                <div class="stats-icon">
+                  <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stats-info">
+                  <h3 class="stats-number">{{ tax_records|selectattr('filing_status', 'equalto', 'filed')|list|length }}</h3>
+                  <p class="stats-label">Filed Returns</p>
+                </div>
+                <div class="stats-progress">
+                  <div class="progress">
+                    <div class="progress-bar" role="progressbar" style="width: {{ (tax_records|selectattr('filing_status', 'equalto', 'filed')|list|length / tax_records|length * 100)|round }}%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="stats-card bg-gradient-orange text-white">
+                <div class="stats-icon">
+                  <i class="fas fa-hourglass-half"></i>
+                </div>
+                <div class="stats-info">
+                  <h3 class="stats-number">{{ tax_records|selectattr('filing_status', 'equalto', 'pending')|list|length }}</h3>
+                  <p class="stats-label">Pending Returns</p>
+                </div>
+                <div class="stats-progress">
+                  <div class="progress">
+                    <div class="progress-bar" role="progressbar" style="width: {{ (tax_records|selectattr('filing_status', 'equalto', 'pending')|list|length / tax_records|length * 100)|round }}%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+        
+        <!-- Tax Records Table -->
+        {% if tax_records %}
+          <div class="table-container animate__animated animate__fadeInUp animate__delay-1s">
+            <div class="card border-0 shadow-lg">
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table tax-table mb-0">
+                    <thead>
+                      <tr>
+                        <th scope="col" class="year-col">Financial Year</th>
+                        <th scope="col">Income</th>
+                        <th scope="col">Deductions</th>
+                        <th scope="col">Tax Paid</th>
+                        <th scope="col">Tax Liable</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="action-col">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for record in tax_records %}
+                        <tr class="tax-record-row" data-year="{{ record.financial_year }}">
+                          <td>
+                            <div class="d-flex align-items-center">
+                              <div class="year-indicator me-2"></div>
+                              <strong>{{ record.financial_year }}</strong>
+                            </div>
+                          </td>
+                          <td>
+                            <span class="amount-value">₹{{ "%.2f"|format(record.income) }}</span>
+                          </td>
+                          <td>
+                            <span class="amount-value">₹{{ "%.2f"|format(record.deductions) }}</span>
+                          </td>
+                          <td>
+                            <span class="amount-value">₹{{ "%.2f"|format(record.tax_paid) }}</span>
+                          </td>
+                          <td>
+                            <span class="amount-value">₹{{ "%.2f"|format(record.tax_liable) }}</span>
+                          </td>
+                          <td>
+                            <div class="status-pill-container">
+                              <span class="status-pill 
+                                {% if record.filing_status == 'filed' %}status-success
+                                {% elif record.filing_status == 'pending' %}status-warning
+                                {% elif record.filing_status == 'verified' %}status-primary
+                                {% else %}status-danger
+                                {% endif %}">
+                                {% if record.filing_status == 'filed' %}
+                                  <i class="fas fa-check-circle me-1"></i>
+                                {% elif record.filing_status == 'pending' %}
+                                  <i class="fas fa-clock me-1"></i>
+                                {% elif record.filing_status == 'verified' %}
+                                  <i class="fas fa-shield-alt me-1"></i>
+                                {% else %}
+                                  <i class="fas fa-exclamation-circle me-1"></i>
+                                {% endif %}
+                                {{ record.filing_status|title }}
+                              </span>
+                            </div>
+                          </td>
+                          <td>
+                            <div class="actions-container">
+                              <div class="d-flex gap-2">
+                                {% if record.filing_status == 'pending' %}
+                                  <a href="{{ url_for('file_return', tax_id=record.tax_id) }}" 
+                                     class="btn btn-success btn-sm file-return-btn">
+                                     <i class="fas fa-file-invoice me-1"></i> File
+                                  </a>
+                                {% endif %}
+                                <button class="btn btn-light btn-sm action-btn view-btn" data-bs-toggle="tooltip" title="View Details">
+                                  <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-light btn-sm action-btn" data-bs-toggle="tooltip" title="Download PDF">
+                                  <i class="fas fa-download"></i>
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <!-- Empty State -->
+          <div class="empty-state animate__animated animate__fadeIn animate__delay-1s">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body text-center p-5">
+                <div class="empty-state-icon mb-4">
+                  <i class="fas fa-file-invoice"></i>
+                </div>
+                <h4 class="fw-bold mb-3">No Tax Records Found</h4>
+                <p class="text-muted mb-4">You haven't added any tax records yet. Start by adding your first record.</p>
+                <a href="{{ url_for('add_tax_record') }}" class="btn btn-primary btn-lg pulsate-btn">
+                  <i class="fas fa-plus-circle me-2"></i>Add Your First Record
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* =========== GENERAL STYLES =========== */
+:root {
+  --primary-color: #0d6efd;
+  --primary-dark: #0b5ed7;
+  --primary-light: #e7f1ff;
+  --success-color: #198754;
+  --warning-color: #ffc107;
+  --danger-color: #dc3545;
+  --light-color: #f8f9fa;
+  --dark-color: #212529;
+  --gray-color: #6c757d;
+  --body-bg: #f5f8fa;
+  --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  --animation-timing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+body {
+  background-color: var(--body-bg);
+}
+
+/* =========== PRELOADER =========== */
+.preloader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadeOut 0.5s var(--animation-timing) 1s forwards;
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; visibility: visible; }
+  to { opacity: 0; visibility: hidden; }
+}
+
+/* =========== COMMON ANIMATIONS =========== */
+.animate__animated {
+  animation-duration: 1s;
+  animation-fill-mode: both;
+}
+
+.animate__fadeIn {
+  animation-name: fadeIn;
+}
+
+.animate__fadeInUp {
+  animation-name: fadeInUp;
+}
+
+.animate__delay-1s {
+  animation-delay: 1s;
+}
+
+.animate__faster {
+  animation-duration: 0.5s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 30px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-30px);
+  animation: revealLeft 0.8s var(--animation-timing) 0.7s forwards;
+}
+
+.reveal-right {
+  opacity: 0;
+  transform: translateX(30px);
+  animation: revealRight 0.8s var(--animation-timing) 0.7s forwards;
+}
+
+@keyframes revealLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes revealRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* =========== PROFILE CARD =========== */
+.profile-card {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+  transition: transform 0.3s var(--animation-timing);
+}
+
+.profile-card:hover {
+  transform: translateY(-5px);
+}
+
+.profile-card .card-header {
+  padding: 1.5rem;
+}
+
+.header-shapes {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  opacity: 0.2;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.header-shapes::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background-color: white;
+}
+
+.header-shapes::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: -20px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: white;
+}
+
+.avatar-circle {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  position: relative;
+  border: 4px solid white;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
+}
+
+.avatar-circle:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.avatar-circle .initials {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.info-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hover-btn {
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  transition: all 0.3s;
+}
+
+.hover-btn:hover {
+  color: white;
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+/* =========== GRADIENT TEXT =========== */
+.text-gradient {
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+/* =========== ADD RECORD BUTTON =========== */
+.add-record-btn {
+  position: relative;
+  overflow: hidden;
+  border-radius: 50px;
+  padding: 0.6rem 1.5rem;
+  transition: all 0.3s;
+  box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+}
+
+.add-record-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(13, 110, 253, 0.4);
+}
+
+.add-record-btn .btn-effect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  transform: scale(0);
+  opacity: 0;
+  transition: all 0.5s;
+}
+
+.add-record-btn:hover .btn-effect {
+  transform: scale(2);
+  opacity: 1;
+}
+
+/* =========== STATS CARDS =========== */
+.stats-container {
+  opacity: 0;
+  animation: fadeInStaggered 0.5s var(--animation-timing) 1s forwards;
+}
+
+@keyframes fadeInStaggered {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.stats-card {
+  border-radius: 12px;
+  padding: 1.25rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  transition: all 0.3s var(--animation-timing);
+}
+
+.stats-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.bg-gradient-blue {
+  background-image: linear-gradient(to right, #0d6efd, #0b5ed7);
+}
+
+.bg-gradient-green {
+  background-image: linear-gradient(to right, #198754, #157347);
+}
+
+.bg-gradient-orange {
+  background-image: linear-gradient(to right, #fd7e14, #e56a02);
+}
+
+.stats-icon {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.8rem;
+  opacity: 0.3;
+}
+
+.stats-info {
+  position: relative;
+  z-index: 1;
+}
+
+.stats-number {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+}
+
+.stats-label {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.stats-progress {
+  margin-top: 0.7rem;
+}
+
+.stats-progress .progress {
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.stats-progress .progress-bar {
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+/* =========== TABLE STYLING =========== */
+.table-container {
+  margin-bottom: 2rem;
+}
+
+.tax-table {
+  margin-bottom: 0;
+}
+
+.tax-table thead th {
+  background-color: #f8f9fa;
+  border-bottom: none;
+  padding: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  color: var(--gray-color);
+}
+
+.tax-table tbody td {
+  padding: 1rem;
+  vertical-align: middle;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.tax-record-row {
+  position: relative;
+  transition: all 0.3s;
+}
+
+.tax-record-row:hover {
+  background-color: rgba(0, 123, 255, 0.03);
+}
+
+.tax-record-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  background-color: var(--primary-color);
+  transition: width 0.3s;
+}
+
+.tax-record-row:hover::before {
+  width: 3px;
+}
+
+.year-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+}
+
+.amount-value {
+  font-weight: 500;
+  background: linear-gradient(45deg, #333, #666);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* =========== STATUS PILLS =========== */
+.status-pill-container {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.status-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+}
+
+.status-success {
+  background-color: rgba(25, 135, 84, 0.1);
+  color: var(--success-color);
+}
+
+.status-warning {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: #d19900;
+}
+
+.status-primary {
+  background-color: rgba(13, 110, 253, 0.1);
+  color: var(--primary-color);
+}
+
+.status-danger {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: var(--danger-color);
+}
+
+/* =========== ACTION BUTTONS =========== */
+.action-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s;
+  background-color: #f8f9fa;
+  border: none;
+  padding: 0;
+}
+
+.action-btn:hover {
+  background-color: var(--primary-light);
+  color: var(--primary-color);
+  transform: translateY(-2px);
+}
+
+.file-return-btn {
+  border-radius: 50px;
+  padding: 0.4rem 0.8rem;
+  font-weight: 500;
+  box-shadow: 0 3px 10px rgba(25, 135, 84, 0.2);
+  transition: all 0.3s;
+  animation: pulsate 2s infinite;
+}
+
+.file-return-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(25, 135, 84, 0.3);
+}
+
+@keyframes pulsate {
+  0% { transform: scale(1); box-shadow: 0 3px 10px rgba(25, 135, 84, 0.2); }
+  50% { transform: scale(1.05); box-shadow: 0 5px 15px rgba(25, 135, 84, 0.3); }
+  100% { transform: scale(1); box-shadow: 0 3px 10px rgba(25, 135, 84, 0.2); }
+}
+
+/* =========== EMPTY STATE =========== */
+.empty-state {
+  min-height: 300px;
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  color: #d1d9e6;
+}
+
+.pulsate-btn {
+  animation: pulsateButton 2s infinite;
+}
+
+@keyframes pulsateButton {
+  0% { transform: scale(1); box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3); }
+  50% { transform: scale(1.05); box-shadow: 0 10px 25px rgba(13, 110, 253, 0.4); }
+  100% { transform: scale(1); box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3); }
+}
+
+/* =========== RESPONSIVE FIXES =========== */
+@media (max-width: 767.98px) {
+  .stats-card {
+    margin-bottom: 1rem;
+  }
+  
+  .tax-table thead th:not(.year-col):not(.action-col) {
+    display: none;
+  }
+  
+  .tax-table tbody td:not(:first-child):not(:last-child) {
+    display: none;
+  }
+}
+
+/* =========== JAVASCRIPT =========== */
+</style>
+
+<script>
+// Initialize page with animations and interactivity
+document.addEventListener('DOMContentLoaded', function() {
+  // Remove preloader after content is loaded
+  setTimeout(() => {
+    document.querySelector('.preloader').style.display = 'none';
+  }, 1500);
+  
+  // Initialize tooltips if Bootstrap JS is available
+  if (typeof bootstrap !== 'undefined') {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+  }
+  
+  // Staggered animation for table rows
+  const tableRows = document.querySelectorAll('.tax-record-row');
+  tableRows.forEach((row, index) => {
+    row.style.opacity = '0';
+    row.style.transform = 'translateY(20px)';
+    setTimeout(() => {
+      row.style.transition = 'all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      row.style.opacity = '1';
+      row.style.transform = 'translateY(0)';
+    }, 1200 + (index * 100));
+  });
+  
+  // Apply hover effect to action buttons
+  const actionBtns = document.querySelectorAll('.action-btn');
+  actionBtns.forEach(btn => {
+    btn.addEventListener('mouseover', function() {
+      this.style.transform = 'translateY(-2px)';
+    });
+    btn.addEventListener('mouseout', function() {
+      this.style.transform = 'translateY(0)';
+    });
+  });
+  
+  // Animated counters for stats cards if present
+  if (document.querySelector('.stats-number')) {
+    const statNumbers = document.querySelectorAll('.stats-number');
+    statNumbers.forEach(number => {
+      const finalValue = parseInt(number.textContent);
+      animateCounter(number, 0, finalValue, 1500);
+    });
+  }
+  
+  // Counter animation function
+  function animateCounter(element, start, end, duration) {
+    let startTimestamp = null;
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      const currentValue = Math.floor(progress * (end - start) + start);
+      element.textContent = currentValue;
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      }
+    };
+    window.requestAnimationFrame(step);
+  }
+});
+</script>
+{% endblock %}

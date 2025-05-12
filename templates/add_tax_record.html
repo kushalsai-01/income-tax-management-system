@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Add Tax Record</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('add_tax_record') }}">
+                    <div class="mb-3">
+                        <label for="financial_year" class="form-label">Financial Year (e.g., 2022-23)</label>
+                        <input type="text" class="form-control" id="financial_year" name="financial_year" 
+                               pattern="\d{4}-\d{2}" title="Format: YYYY-YY (e.g., 2022-23)" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="income" class="form-label">Total Income (₹)</label>
+                        <input type="number" step="0.01" class="form-control" id="income" name="income" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="deductions" class="form-label">Deductions (₹)</label>
+                        <input type="number" step="0.01" class="form-control" id="deductions" name="deductions" value="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="tax_paid" class="form-label">Tax Already Paid (₹)</label>
+                        <input type="number" step="0.01" class="form-control" id="tax_paid" name="tax_paid" value="0" required>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Save Record</button>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
